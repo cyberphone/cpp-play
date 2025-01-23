@@ -13,6 +13,7 @@ class CborBuffer {
       int64_t intValue;
       double floatValue;
       const uint8_t *stringValue;
+      CborMap *cborMap;
     } coreData;
     int optionalLength;
     void (* executor)(CborBuffer&, CborObject&);
@@ -58,14 +59,18 @@ class CBOR {
 
     static CborBuffer::CborObject String(const char* string);
 
+    static CborBuffer::CborObject Map(CborMap map);
+
     static CborBuffer::CborObject PreComputed(const uint8_t* cborItem, int length);
 };
 
 class CborMap {
   int startPos;
+  int size;
   CborBuffer *cborBuffer;
 
   public:
+    CborMap();
     CborMap(CborBuffer&);
 
     CborMap set(CborBuffer::CborObject key, CborBuffer::CborObject value);

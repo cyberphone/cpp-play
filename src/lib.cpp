@@ -13,16 +13,28 @@ void CborBuffer::put(uint8_t byte) {
 }
 
 CborBuffer& CborBuffer::add(CborObject cborObject) {
-  cborObject.executor(*this, cborObject);
+  if (cborObject.executor) cborObject.executor(*this, cborObject);
   return *this;
 }
 
 CborMap::CborMap(CborBuffer& cborMasterBuffer) {
   cborBuffer = &cborMasterBuffer;
+  size = 0;
+  startPos = cborBuffer->pos;
+  cborBuffer->put(0);
+}
+
+CborMap::CborMap() {
+  cborBuffer = NULL;
 }
 
 CborMap CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
-  cborBuffer->add(key).add(value);
+  size++;
+  int beginKey = cborBuffer->pos;
+  cborBuffer->add(key);
+  int lastOfKey = cborBuffer->pos;
+  cborBuffer->add(value);
+  int endOfEntry = cborBuffer->pos;
   return *this;
 }
 
@@ -68,6 +80,13 @@ CborBuffer::CborObject CBOR::String(const char* string) {
   cborObject.coreData.stringValue = (const uint8_t*) string;
   cborObject.optionalLength = strlen(string);
   cborObject.executor = CborBuffer::CborObject::stringExec;
+  return cborObject;
+}
+
+CborBuffer::CborObject CBOR::Map(CborMap map) {
+  CborBuffer::CborObject cborObject;
+  cborObject.coreData.cborMap = &map;
+  cborObject.executor = NULL;
   return cborObject;
 }
 

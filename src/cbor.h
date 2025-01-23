@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #pragma once
 
@@ -9,25 +10,27 @@ class CborBuffer {
 
   class CborObject {
     union {
-      int intValue;
+      int64_t intValue;
       double floatValue;
-      const unsigned char *stringValue;
+      const uint8_t *stringValue;
     } coreData;
     int optionalLength;
     void (* executor)(CborBuffer&, CborObject&);
     static void intExec(CborBuffer&, CborObject&);
     static void uintExec(CborBuffer&, CborObject&);
     static void stringExec(CborBuffer&, CborObject&);
+    static void preComputedExec(CborBuffer&, CborObject&);
 
     friend class CborBuffer;
     friend class CBOR;
+    friend class CborMap;
   };
 
-  unsigned char *buffer;
+  uint8_t *buffer;
   int length;
   int pos;
 
-  void put(unsigned char byte);
+  void put(uint8_t byte);
 
   public:
     CborBuffer(unsigned char *outputBuffer, int outputBufferSize);
@@ -38,30 +41,34 @@ class CborBuffer {
 
     CborBuffer& add(CborObject cborObject);
 
-    void add(CborMap& map);
-
     int getPos() {
       return pos;
     }
 
     friend class CBOR;
+    friend class CborMap;
 };
 
 class CBOR {
   public:
 
-    static CborBuffer::CborObject Int(int i);
+    static CborBuffer::CborObject Int(int64_t value);
 
-    static CborBuffer::CborObject Uint(unsigned int i);
+    static CborBuffer::CborObject Uint(uint64_t value);
 
     static CborBuffer::CborObject String(const char* string);
+
+    static CborBuffer::CborObject PreComputed(const uint8_t* cborItem, int length);
 };
 
 class CborMap {
   int startPos;
+  CborBuffer *cborBuffer;
 
   public:
-    CborMap();
+    CborMap(CborBuffer&);
+
+    CborMap set(CborBuffer::CborObject key, CborBuffer::CborObject value);
 
   friend class CborBuffer;
 };

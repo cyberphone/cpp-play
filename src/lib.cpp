@@ -2,14 +2,47 @@
 #include <string.h>
 #include "cbor.h"
 
+static const uint64_t MASK_LOWER_32 = 0x00000000fffffffful;
+
 CborBuffer::CborBuffer(uint8_t *outputBuffer, int outputBufferSize) {
   buffer = outputBuffer;
   length = outputBufferSize;
   pos = 0;
 }
 
-void CborBuffer::put(uint8_t byte) {
+void CborBuffer::putByte(uint8_t byte) {
   buffer[pos++] = byte;
+}
+
+void CborBuffer::putBytes(const uint8_t *byteBuffer, int length) {
+  while (--length >= 0) {
+    putByte(*byteBuffer++);
+  }
+}
+
+void CborBuffer::encodeTagAndValue(int tag, int length, uint64_t value) {
+  putByte((uint8_t) tag);
+  uint8_t buffer[8];
+  int i = length;
+  while (--i >= 0) {
+      buffer[i] = (uint8_t)value;
+      value >>= 8;
+  }
+  putBytes(buffer, length);
+}
+
+void CborBuffer::encodeTagAndN(int majorType, uint64_t n) {
+  int modifier = (int)n;
+  int length = 0;
+  if (n > 23) {
+    modifier = 27;
+    length = 32;
+    while (((MASK_LOWER_32 << length) & n) == 0) {
+      modifier--;
+      length >>= 1;
+    }
+  }
+  encodeTagAndValue(majorType | modifier, length >> 2, n);
 }
 
 CborBuffer& CborBuffer::add(CborObject cborObject) {
@@ -17,15 +50,15 @@ CborBuffer& CborBuffer::add(CborObject cborObject) {
   return *this;
 }
 
-CborMap::CborMap(CborBuffer& cborMasterBuffer) {
+CborStructure::CborStructure() {
+  cborBuffer = NULL;
+}
+
+CborStructure::CborStructure(CborBuffer& cborMasterBuffer, int tag) {
   cborBuffer = &cborMasterBuffer;
   size = 0;
   startPos = cborBuffer->pos;
-  cborBuffer->put(0);
-}
-
-CborMap::CborMap() {
-  cborBuffer = NULL;
+  cborBuffer->putByte((uint8_t)tag);
 }
 
 CborMap CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
@@ -38,25 +71,33 @@ CborMap CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
   return *this;
 }
 
+
+
 void CborBuffer::CborObject::intExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
-  cborBuffer.put((unsigned char)cborObject.coreData.intValue);
+  int64_t value = cborObject.coreData.intValue;
+  int tag = MT_UNSIGNED;
+  if (value < 0) {
+      tag = MT_NEGATIVE;
+      value = ~value;
+  }
+  cborBuffer.encodeTagAndN(tag, (uint64_t)value);
   printf("intexec\n");
 }
 
 void CborBuffer::CborObject::uintExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
-  printf("intexec\n");
+  cborBuffer.encodeTagAndN(MT_UNSIGNED, (uint64_t)cborObject.coreData.intValue);
+  printf("uintexec\n");
 }
 
 void CborBuffer::CborObject::stringExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
-  for (int length = 0; length < cborObject.optionalLength; ) {
-    cborBuffer.put(cborObject.coreData.stringValue[length++]);
-  }
+  cborBuffer.encodeTagAndN(MT_TEXT_STRING, cborObject.optionalLength);
+  cborBuffer.putBytes(cborObject.coreData.stringValue, cborObject.optionalLength);
   printf("stringexec\n");
 }
 
 void CborBuffer::CborObject::preComputedExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
   for (int length = 0; length < cborObject.optionalLength; ) {
-    cborBuffer.put(cborObject.coreData.stringValue[length++]);
+    cborBuffer.putByte(cborObject.coreData.stringValue[length++]);
   }
   printf("precompexec\n");
 }

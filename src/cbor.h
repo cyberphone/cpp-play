@@ -29,11 +29,11 @@ class CborBuffer {
       CborMap *cborMap;
     } coreData;
     int optionalLength;
-    void (* executor)(CborBuffer&, CborObject&);
-    static void intExec(CborBuffer&, CborObject&);
-    static void uintExec(CborBuffer&, CborObject&);
-    static void stringExec(CborBuffer&, CborObject&);
-    static void preComputedExec(CborBuffer&, CborObject&);
+    void (* executor)(CborBuffer*, CborObject&);
+    static void intExec(CborBuffer*, CborObject&);
+    static void uintExec(CborBuffer*, CborObject&);
+    static void stringExec(CborBuffer*, CborObject&);
+    static void preComputedExec(CborBuffer*, CborObject&);
 
     friend class CborBuffer;
     friend class CBOR;
@@ -59,7 +59,7 @@ class CborBuffer {
       printf("buffdtor\n");
     }
 
-    CborBuffer& add(CborObject cborObject);
+    CborBuffer* add(CborObject cborObject);
 
     uint8_t getByte(int postion) {
       return buffer[postion];

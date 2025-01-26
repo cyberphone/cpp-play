@@ -45,9 +45,9 @@ void CborBuffer::encodeTagAndN(int majorType, uint64_t n) {
   encodeTagAndValue(majorType | modifier, length >> 2, n);
 }
 
-CborBuffer& CborBuffer::add(CborObject cborObject) {
-  if (cborObject.executor) cborObject.executor(*this, cborObject);
-  return *this;
+CborBuffer* CborBuffer::add(CborObject cborObject) {
+  if (cborObject.executor) cborObject.executor(this, cborObject);
+  return this;
 }
 
 CborStructure::CborStructure() {
@@ -78,33 +78,31 @@ CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) 
   return this;
 }
 
-
-
-void CborBuffer::CborObject::intExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::intExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
   int64_t value = cborObject.coreData.intValue;
   int tag = MT_UNSIGNED;
   if (value < 0) {
       tag = MT_NEGATIVE;
       value = ~value;
   }
-  cborBuffer.encodeTagAndN(tag, (uint64_t)value);
+  cborBuffer->encodeTagAndN(tag, (uint64_t)value);
   printf("intexec\n");
 }
 
-void CborBuffer::CborObject::uintExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
-  cborBuffer.encodeTagAndN(MT_UNSIGNED, (uint64_t)cborObject.coreData.intValue);
+void CborBuffer::CborObject::uintExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+  cborBuffer->encodeTagAndN(MT_UNSIGNED, (uint64_t)cborObject.coreData.intValue);
   printf("uintexec\n");
 }
 
-void CborBuffer::CborObject::stringExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
-  cborBuffer.encodeTagAndN(MT_TEXT_STRING, cborObject.optionalLength);
-  cborBuffer.putBytes(cborObject.coreData.stringValue, cborObject.optionalLength);
+void CborBuffer::CborObject::stringExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+  cborBuffer->encodeTagAndN(MT_TEXT_STRING, cborObject.optionalLength);
+  cborBuffer->putBytes(cborObject.coreData.stringValue, cborObject.optionalLength);
   printf("stringexec\n");
 }
 
-void CborBuffer::CborObject::preComputedExec(CborBuffer& cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
   for (int length = 0; length < cborObject.optionalLength; ) {
-    cborBuffer.putByte(cborObject.coreData.stringValue[length++]);
+    cborBuffer->putByte(cborObject.coreData.stringValue[length++]);
   }
   printf("precompexec\n");
 }

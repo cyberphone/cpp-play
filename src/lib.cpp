@@ -65,7 +65,16 @@ CborStructure::CborStructure(CborBuffer* cborMasterBuffer, int tag) {
 
 void CborStructure::updateTag() {
   printf("UPD%x\n", this);
-  cborBuffer->buffer[startPos] = cborBuffer->buffer[startPos] | ++size;
+  cborBuffer->buffer[startPos] = (cborBuffer->buffer[startPos] & 0xe0) | ++size;
+}
+
+CborArray* CborArray::add(CborBuffer::CborObject value) {
+  updateTag();
+  int beginKey = cborBuffer->pos;
+  cborBuffer->add(value);
+  int endOfEntry = cborBuffer->pos;
+  printf("add=%x\n", this);
+  return this;
 }
 
 CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
@@ -75,10 +84,12 @@ CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) 
   int lastOfKey = cborBuffer->pos;
   cborBuffer->add(value);
   int endOfEntry = cborBuffer->pos;
+  printf("set=%x\n", this);
   return this;
 }
 
-void CborBuffer::CborObject::intExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::intExec(CborBuffer* cborBuffer, 
+                                    CborBuffer::CborObject& cborObject) {
   int64_t value = cborObject.coreData.intValue;
   int tag = MT_UNSIGNED;
   if (value < 0) {
@@ -89,22 +100,31 @@ void CborBuffer::CborObject::intExec(CborBuffer* cborBuffer, CborBuffer::CborObj
   printf("intexec\n");
 }
 
-void CborBuffer::CborObject::uintExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::uintExec(CborBuffer* cborBuffer,
+                                      CborBuffer::CborObject& cborObject) {
   cborBuffer->encodeTagAndN(MT_UNSIGNED, (uint64_t)cborObject.coreData.intValue);
   printf("uintexec\n");
 }
 
-void CborBuffer::CborObject::stringExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::stringExec(CborBuffer* cborBuffer,
+                                        CborBuffer::CborObject& cborObject) {
   cborBuffer->encodeTagAndN(MT_TEXT_STRING, cborObject.optionalLength);
   cborBuffer->putBytes(cborObject.coreData.stringValue, cborObject.optionalLength);
   printf("stringexec\n");
 }
 
-void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer, CborBuffer::CborObject& cborObject) {
+void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer, 
+                                             CborBuffer::CborObject& cborObject) {
   for (int length = 0; length < cborObject.optionalLength; ) {
     cborBuffer->putByte(cborObject.coreData.stringValue[length++]);
   }
   printf("precompexec\n");
+}
+
+void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
+                                            CborBuffer::CborObject& cborObject) {
+  cborBuffer->putByte((uint8_t)cborObject.coreData.intValue);
+  printf("structexec\n");
 }
 
 CborBuffer::CborObject CBOR::Int(int64_t value) {
@@ -129,17 +149,24 @@ CborBuffer::CborObject CBOR::String(const char* string) {
   return cborObject;
 }
 
-CborBuffer::CborObject CBOR::Map(CborMap map) {
-  CborBuffer::CborObject cborObject;
-  cborObject.coreData.cborMap = &map;
-  cborObject.executor = NULL;
-  return cborObject;
-}
-
 CborBuffer::CborObject CBOR::PreComputed(const uint8_t* cborItem, int length) {
   CborBuffer::CborObject cborObject;
   cborObject.coreData.stringValue = cborItem;
   cborObject.optionalLength = length;
   cborObject.executor = CborBuffer::CborObject::preComputedExec;
+  return cborObject;
+}
+
+CborBuffer::CborObject CBOR::Array(CborArray& CborArray, CborBuffer& cborBuffer) {
+  CborBuffer::CborObject cborObject;
+  cborObject.coreData.intValue = (int64_t) MT_ARRAY;
+  cborObject.executor = CborBuffer::CborObject::structuredExec;
+  return cborObject;
+}
+
+CborBuffer::CborObject CBOR::Map(CborMap& cborMap, CborBuffer& cborBuffer) {
+  CborBuffer::CborObject cborObject;
+  cborObject.coreData.intValue = (int64_t) MT_MAP;
+  cborObject.executor = CborBuffer::CborObject::structuredExec;
   return cborObject;
 }

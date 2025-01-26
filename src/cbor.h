@@ -17,16 +17,21 @@ static const int MT_TRUE          = 0xf5;
 static const int MT_NULL          = 0xf6;
 
 class CborMap;
+class CborArray;
 class CBOR;
 
 class CborBuffer {
 
   class CborObject {
+
+    CborObject() {
+      executor = NULL;
+    }
+
     union {
       int64_t intValue;
       double floatValue;
       const uint8_t *stringValue;
-      CborMap *cborMap;
     } coreData;
     int optionalLength;
     void (* executor)(CborBuffer*, CborObject&);
@@ -34,10 +39,12 @@ class CborBuffer {
     static void uintExec(CborBuffer*, CborObject&);
     static void stringExec(CborBuffer*, CborObject&);
     static void preComputedExec(CborBuffer*, CborObject&);
+    static void structuredExec(CborBuffer*, CborObject&);
 
     friend class CborBuffer;
     friend class CBOR;
     friend class CborMap;
+    friend class CborArray;
   };
 
   uint8_t *buffer;
@@ -61,8 +68,8 @@ class CborBuffer {
 
     CborBuffer* add(CborObject cborObject);
 
-    uint8_t getByte(int postion) {
-      return buffer[postion];
+    uint8_t getByte(int position) {
+      return buffer[position];
     }
 
     int getPos() {
@@ -71,6 +78,7 @@ class CborBuffer {
 
     friend class CBOR;
     friend class CborMap;
+    friend class CborArray;
     friend class CborStructure;
 };
 
@@ -83,7 +91,9 @@ class CBOR {
 
     static CborBuffer::CborObject String(const char* string);
 
-    static CborBuffer::CborObject Map(CborMap map);
+    static CborBuffer::CborObject Array(CborArray& cborArray, CborBuffer& cborBuffer);
+
+    static CborBuffer::CborObject Map(CborMap& cborMap, CborBuffer& cborBuffer);
 
     static CborBuffer::CborObject PreComputed(const uint8_t* cborItem, int length);
 };
@@ -101,6 +111,7 @@ class CborStructure {
 
   friend class CborBuffer;
   friend class CborMap;
+  friend class CborArray;
 };
 
 class CborMap : CborStructure {
@@ -110,11 +121,27 @@ class CborMap : CborStructure {
 
     }
 
-    CborMap(CborBuffer& cborBuffer) : CborStructure(& cborBuffer, MT_MAP) {
+    CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer, MT_MAP) {
       printf("map%x\n",this);
     }
 
     CborMap* set(CborBuffer::CborObject key, CborBuffer::CborObject value);
+
+  friend class CborBuffer;
+};
+
+class CborArray : CborStructure {
+
+  public:
+    CborArray() : CborStructure() {
+
+    }
+
+    CborArray(CborBuffer& cborBuffer) : CborStructure(&cborBuffer, MT_ARRAY) {
+      printf("array%x\n",this);
+    }
+
+    CborArray* add(CborBuffer::CborObject value);
 
   friend class CborBuffer;
 };

@@ -91,10 +91,13 @@ class CBOR {
 class CborStructure {
   int size;
   int startPos;
+  int endPos;
   CborBuffer *cborBuffer;
 
+  void updateTag();
+
   CborStructure();
-  CborStructure(CborBuffer&, int);
+  CborStructure(CborBuffer*, int);
 
   friend class CborBuffer;
   friend class CborMap;
@@ -105,13 +108,13 @@ class CborMap : CborStructure {
   public:
     CborMap() : CborStructure() {
 
-    };
-
-    CborMap(CborBuffer& cborBuffer) : CborStructure(cborBuffer, MT_MAP) {
-
     }
 
-    CborMap set(CborBuffer::CborObject key, CborBuffer::CborObject value);
+    CborMap(CborBuffer& cborBuffer) : CborStructure(& cborBuffer, MT_MAP) {
+      printf("map%x\n",this);
+    }
+
+    CborMap* set(CborBuffer::CborObject key, CborBuffer::CborObject value);
 
   friend class CborBuffer;
 };

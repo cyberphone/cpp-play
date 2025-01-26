@@ -54,21 +54,28 @@ CborStructure::CborStructure() {
   cborBuffer = NULL;
 }
 
-CborStructure::CborStructure(CborBuffer& cborMasterBuffer, int tag) {
-  cborBuffer = &cborMasterBuffer;
+CborStructure::CborStructure(CborBuffer* cborMasterBuffer, int tag) {
+  printf("Str=%x\n", this);
+  cborBuffer = cborMasterBuffer;
   size = 0;
   startPos = cborBuffer->pos;
   cborBuffer->putByte((uint8_t)tag);
+  endPos = cborBuffer->pos;
 }
 
-CborMap CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
-  size++;
+void CborStructure::updateTag() {
+  printf("UPD%x\n", this);
+  cborBuffer->buffer[startPos] = cborBuffer->buffer[startPos] | ++size;
+}
+
+CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
+  updateTag();
   int beginKey = cborBuffer->pos;
   cborBuffer->add(key);
   int lastOfKey = cborBuffer->pos;
   cborBuffer->add(value);
   int endOfEntry = cborBuffer->pos;
-  return *this;
+  return this;
 }
 
 

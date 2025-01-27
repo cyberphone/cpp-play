@@ -25,10 +25,6 @@ class CborBuffer {
 
   class CborObject {
 
-    CborObject() {
-      executor = NULL;
-    }
-
     union {
       int64_t intValue;
       double floatValue;
@@ -67,6 +63,12 @@ class CborBuffer {
     ~CborBuffer() {
       printf("buffdtor\n");
     }
+
+    enum Error {OK, BUFFER_OVERFLOW, WRONG_CONSTRUCTOR};
+    
+    static Error error;
+
+    static void setError(Error error);
 
     CborBuffer* add(CborObject cborObject);
 

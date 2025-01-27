@@ -25,6 +25,7 @@ int main(void) {
      ->set(CBOR::Int(-9), CBOR::Array(cborArray))
  
 ;
+  cborArray.add(CBOR::String("Yeah"));
 
   
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));

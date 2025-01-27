@@ -8,6 +8,7 @@ CborBuffer::CborBuffer(uint8_t *outputBuffer, int outputBufferSize) {
   buffer = outputBuffer;
   length = outputBufferSize;
   pos = 0;
+  CborBuffer::Error error = Error::OK;
 }
 
 void CborBuffer::putByte(uint8_t byte) {
@@ -46,8 +47,16 @@ void CborBuffer::encodeTagAndN(int majorType, uint64_t n) {
 }
 
 CborBuffer* CborBuffer::add(CborObject cborObject) {
-  if (cborObject.executor) cborObject.executor(this, cborObject);
+  cborObject.executor(this, cborObject);
   return this;
+}
+
+CborBuffer::Error CborBuffer::error = CborBuffer::Error::OK;
+
+void CborBuffer::setError(Error error) {
+  if (CborBuffer::error == CborBuffer::Error::OK) {
+    CborBuffer::error = error;
+  }
 }
 
 CborStructure::CborStructure() {
@@ -129,6 +138,9 @@ void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer,
 
 void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
                                             CborBuffer::CborObject& cborObject) {
+  if (!cborObject.coreData.cborStructure->cborBuffer) {
+    CborBuffer::setError(CborBuffer::Error::WRONG_CONSTRUCTOR);
+  }
   cborObject.coreData.cborStructure->cborBuffer = cborBuffer;
   cborObject.coreData.cborStructure->putInitialTag();
   printf("structexec\n");

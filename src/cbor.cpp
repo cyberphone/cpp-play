@@ -13,16 +13,16 @@ int main(void) {
   uint8_t buffer[500];
   CborBuffer cborBuffer(buffer, sizeof(buffer));
 
-  CborMap cm;
+  CborMap cborMap;
 
-  CborArray ca;
+  CborArray cborArray;
 
   CborMap(cborBuffer)
      .set(CBOR::Int(2), CBOR::String("value"))
      ->set(CBOR::Int(-3), CBOR::String("67676"))
-     ->set(CBOR::Int(0), CBOR::Map(cm, cborBuffer))
+     ->set(CBOR::Int(0), CBOR::Map(cborMap))
      ->set(CBOR::Int(6), CBOR::Uint(0x8000000000007e00ul))
-     ->set(CBOR::Int(-9), CBOR::Array(ca, cborBuffer))
+     ->set(CBOR::Int(-9), CBOR::Array(cborArray))
  
 ;
 

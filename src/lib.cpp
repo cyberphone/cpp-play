@@ -67,6 +67,13 @@ void CborStructure::updateTag() {
   cborBuffer->buffer[startPos] = (cborBuffer->buffer[startPos] & 0xe0) | ++size;
 }
 
+void CborStructure::putInitialTag() {
+  size = 0;
+  startPos = cborBuffer->pos;
+  cborBuffer->putByte(getTag());
+  endPos = cborBuffer->pos;
+}
+
 CborArray* CborArray::add(CborBuffer::CborObject value) {
   updateTag();
   int beginKey = cborBuffer->pos;
@@ -122,7 +129,8 @@ void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer,
 
 void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
                                             CborBuffer::CborObject& cborObject) {
-  cborBuffer->putByte((uint8_t)cborObject.coreData.intValue);
+  cborObject.coreData.cborStructure->cborBuffer = cborBuffer;
+  cborObject.coreData.cborStructure->putInitialTag();
   printf("structexec\n");
 }
 
@@ -156,16 +164,16 @@ CborBuffer::CborObject CBOR::PreComputed(const uint8_t* cborItem, int length) {
   return cborObject;
 }
 
-CborBuffer::CborObject CBOR::Array(CborArray& CborArray, CborBuffer& cborBuffer) {
+CborBuffer::CborObject CBOR::Array(CborArray& cborArray) {
   CborBuffer::CborObject cborObject;
-  cborObject.coreData.intValue = (int64_t) MT_ARRAY;
+  cborObject.coreData.cborStructure = &cborArray;
   cborObject.executor = CborBuffer::CborObject::structuredExec;
   return cborObject;
 }
 
-CborBuffer::CborObject CBOR::Map(CborMap& cborMap, CborBuffer& cborBuffer) {
+CborBuffer::CborObject CBOR::Map(CborMap& cborMap) {
   CborBuffer::CborObject cborObject;
-  cborObject.coreData.intValue = (int64_t) MT_MAP;
+  cborObject.coreData.cborStructure = &cborMap;
   cborObject.executor = CborBuffer::CborObject::structuredExec;
   return cborObject;
 }

@@ -19,6 +19,7 @@ static const int MT_NULL          = 0xf6;
 class CborMap;
 class CborArray;
 class CBOR;
+class CborStructure;
 
 class CborBuffer {
 
@@ -32,6 +33,7 @@ class CborBuffer {
       int64_t intValue;
       double floatValue;
       const uint8_t *stringValue;
+      CborStructure *cborStructure;
     } coreData;
     int optionalLength;
     void (* executor)(CborBuffer*, CborObject&);
@@ -91,9 +93,9 @@ class CBOR {
 
     static CborBuffer::CborObject String(const char* string);
 
-    static CborBuffer::CborObject Array(CborArray& cborArray, CborBuffer& cborBuffer);
+    static CborBuffer::CborObject Array(CborArray& cborArray);
 
-    static CborBuffer::CborObject Map(CborMap& cborMap, CborBuffer& cborBuffer);
+    static CborBuffer::CborObject Map(CborMap& cborMap);
 
     static CborBuffer::CborObject PreComputed(const uint8_t* cborItem, int length);
 };
@@ -106,14 +108,9 @@ class CborStructure {
 
   void updateTag();
 
-  int getTag() { return 0; }
+  virtual int getTag() = 0;
 
-  void putInitialTag(int tag) {
-    size = 0;
-    startPos = cborBuffer->pos;
-    cborBuffer->putByte((uint8_t)tag);
-    endPos = cborBuffer->pos;
-  }
+  void putInitialTag();
 
   CborStructure();
   CborStructure(CborBuffer*);
@@ -123,7 +120,7 @@ class CborStructure {
   friend class CborArray;
 };
 
-class CborMap : CborStructure {
+class CborMap : public CborStructure {
 
   int getTag() {
     return MT_MAP;
@@ -135,7 +132,7 @@ class CborMap : CborStructure {
     }
 
     CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
-      putInitialTag(MT_MAP);
+      putInitialTag();
       printf("map%x\n",this);
     }
 
@@ -144,7 +141,7 @@ class CborMap : CborStructure {
   friend class CborBuffer;
 };
 
-class CborArray : CborStructure {
+class CborArray : public CborStructure {
 
   int getTag() {
     return MT_ARRAY;

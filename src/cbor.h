@@ -106,8 +106,17 @@ class CborStructure {
 
   void updateTag();
 
+  int getTag() { return 0; }
+
+  void putInitialTag(int tag) {
+    size = 0;
+    startPos = cborBuffer->pos;
+    cborBuffer->putByte((uint8_t)tag);
+    endPos = cborBuffer->pos;
+  }
+
   CborStructure();
-  CborStructure(CborBuffer*, int);
+  CborStructure(CborBuffer*);
 
   friend class CborBuffer;
   friend class CborMap;
@@ -116,12 +125,17 @@ class CborStructure {
 
 class CborMap : CborStructure {
 
+  int getTag() {
+    return MT_MAP;
+  }
+
   public:
     CborMap() : CborStructure() {
 
     }
 
-    CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer, MT_MAP) {
+    CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
+      putInitialTag(MT_MAP);
       printf("map%x\n",this);
     }
 
@@ -132,12 +146,16 @@ class CborMap : CborStructure {
 
 class CborArray : CborStructure {
 
+  int getTag() {
+    return MT_ARRAY;
+  }
+
   public:
     CborArray() : CborStructure() {
 
     }
 
-    CborArray(CborBuffer& cborBuffer) : CborStructure(&cborBuffer, MT_ARRAY) {
+    CborArray(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
       printf("array%x\n",this);
     }
 

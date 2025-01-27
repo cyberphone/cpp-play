@@ -54,12 +54,11 @@ CborStructure::CborStructure() {
   cborBuffer = NULL;
 }
 
-CborStructure::CborStructure(CborBuffer* cborMasterBuffer, int tag) {
+CborStructure::CborStructure(CborBuffer* cborMasterBuffer) {
   printf("Str=%x\n", this);
   cborBuffer = cborMasterBuffer;
   size = 0;
   startPos = cborBuffer->pos;
-  cborBuffer->putByte((uint8_t)tag);
   endPos = cborBuffer->pos;
 }
 

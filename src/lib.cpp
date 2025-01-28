@@ -83,11 +83,37 @@ void CborStructure::putInitialTag() {
   endPos = cborBuffer->pos;
 }
 
+int CborStructure::positionItem(int beginItem) {
+  // structured-item
+  //                 ^ endPos
+  // structured-item misplaced-items
+  //                                 ^ beginItem
+  // structured-item misplaced-items new-item
+  //                                          ^ endItem
+  int offset = beginItem - endPos;
+  int endItem = cborBuffer->pos;
+
+  for (int i = 0; i < endItem - beginItem; i++) {
+    // Get new-item byte 
+    uint8_t swap = cborBuffer->buffer[beginItem + i];
+    // Move misplaced-items one step to the right
+    for (int j = offset; j > 0; j--) {
+      cborBuffer->buffer[endPos + i + j] = cborBuffer->buffer[endPos + i + j - 1];
+    }
+    // Store the new-item byte in the right position
+    cborBuffer->buffer[endPos + i] = swap;
+  }
+
+  endPos = endItem - offset;
+  printf("Offset=%d\n", offset);
+  return offset;
+}
+
 CborArray* CborArray::add(CborBuffer::CborObject value) {
   updateTag();
-  int beginKey = cborBuffer->pos;
+  int beginItem = cborBuffer->pos;
   cborBuffer->add(value);
-  int endOfEntry = cborBuffer->pos;
+  positionItem(beginItem);
   printf("add=%x\n", this);
   return this;
 }

@@ -143,7 +143,6 @@ class CborMap : public CborStructure {
 
     CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
       putInitialTag();
-      printf("map%x\n",this);
     }
 
     CborMap* set(CborBuffer::CborObject key, CborBuffer::CborObject value);

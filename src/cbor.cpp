@@ -35,6 +35,12 @@ int main(void) {
 
   cborBuffer.add(CBOR::Int(6))
             ->add(CBOR::String("AAAAf"));
+
+  for (int i = 0; i < 30; i++) { 
+    char string [5];
+    sprintf (string, "%d", i);
+    cborMap.set(CBOR::Int(i), CBOR::String(string)); 
+  }
   
   cborBuffer.add(CBOR::PreComputed(PRECOMPUTED, sizeof(PRECOMPUTED)));
   

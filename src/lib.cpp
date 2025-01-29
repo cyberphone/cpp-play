@@ -66,6 +66,7 @@ void CborBuffer::setError(Error error) {
 
 CborStructure::CborStructure() {
   cborBuffer = NULL;
+  // putInitialTag() does the rest of the initialization
 }
 
 CborStructure::CborStructure(CborBuffer* cborMasterBuffer) {
@@ -137,11 +138,10 @@ CborArray* CborArray::add(CborBuffer::CborObject value) {
 
 CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) {
   updateTag();
-  int beginKey = cborBuffer->pos;
+  int beginItem = cborBuffer->pos;
   cborBuffer->add(key);
-  int lastOfKey = cborBuffer->pos;
   cborBuffer->add(value);
-  int endOfEntry = cborBuffer->pos;
+  positionItem(beginItem);
   return this;
 }
 

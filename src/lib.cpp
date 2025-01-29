@@ -53,8 +53,13 @@ CborBuffer* CborBuffer::add(CborObject cborObject) {
 
 CborBuffer::Error CborBuffer::error = CborBuffer::Error::OK;
 
+
+bool CborBuffer::stillOk() {
+  return CborBuffer::error == CborBuffer::Error::OK;
+}
+
 void CborBuffer::setError(Error error) {
-  if (CborBuffer::error == CborBuffer::Error::OK) {
+  if (CborBuffer::stillOk()) {
     CborBuffer::error = error;
   }
 }
@@ -64,7 +69,6 @@ CborStructure::CborStructure() {
 }
 
 CborStructure::CborStructure(CborBuffer* cborMasterBuffer) {
-  printf("Str=%x\n", this);
   cborBuffer = cborMasterBuffer;
   size = 0;
   startPos = cborBuffer->pos;
@@ -72,8 +76,24 @@ CborStructure::CborStructure(CborBuffer* cborMasterBuffer) {
 }
 
 void CborStructure::updateTag() {
-  printf("UPD%x\n", this);
-  cborBuffer->buffer[startPos] = (cborBuffer->buffer[startPos] & 0xe0) | ++size;
+  if (CborBuffer::stillOk()) {
+    if (++size == 24) {
+      // Extend buffer with one byte
+      cborBuffer->putByte(0);
+      // Make space for the additional byte by moving everything above one step
+      for (int i = cborBuffer->pos; --i > startPos; ) {
+        cborBuffer->buffer[i] = cborBuffer->buffer[i - 1];
+      }
+      // The array item just got one byte longer
+      endPos++;
+    }
+    int modifier = size;
+    if (size >= 24) {
+      modifier = 24;
+      cborBuffer->buffer[startPos + 1] = size;
+    }
+    cborBuffer->buffer[startPos] = (cborBuffer->buffer[startPos] & 0xe0) | modifier;
+  }
 }
 
 void CborStructure::putInitialTag() {
@@ -84,12 +104,10 @@ void CborStructure::putInitialTag() {
 }
 
 int CborStructure::positionItem(int beginItem) {
-  // structured-item
-  //                 ^ endPos
-  // structured-item misplaced-items
-  //                                 ^ beginItem
   // structured-item misplaced-items new-item
-  //                                          ^ endItem
+  //                 |               |        |
+  //                 * endPos        |        * endItem
+  //                                 * beginItem
   int offset = beginItem - endPos;
   int endItem = cborBuffer->pos;
 
@@ -97,6 +115,7 @@ int CborStructure::positionItem(int beginItem) {
     // Get new-item byte 
     uint8_t swap = cborBuffer->buffer[beginItem + i];
     // Move misplaced-items one step to the right
+    // Yeah, saving memory got priority over speed...
     for (int j = offset; j > 0; j--) {
       cborBuffer->buffer[endPos + i + j] = cborBuffer->buffer[endPos + i + j - 1];
     }
@@ -105,7 +124,6 @@ int CborStructure::positionItem(int beginItem) {
   }
 
   endPos = endItem - offset;
-  printf("Offset=%d\n", offset);
   return offset;
 }
 
@@ -114,7 +132,6 @@ CborArray* CborArray::add(CborBuffer::CborObject value) {
   int beginItem = cborBuffer->pos;
   cborBuffer->add(value);
   positionItem(beginItem);
-  printf("add=%x\n", this);
   return this;
 }
 
@@ -125,7 +142,6 @@ CborMap* CborMap::set(CborBuffer::CborObject key, CborBuffer::CborObject value) 
   int lastOfKey = cborBuffer->pos;
   cborBuffer->add(value);
   int endOfEntry = cborBuffer->pos;
-  printf("set=%x\n", this);
   return this;
 }
 
@@ -138,20 +154,17 @@ void CborBuffer::CborObject::intExec(CborBuffer* cborBuffer,
       value = ~value;
   }
   cborBuffer->encodeTagAndN(tag, (uint64_t)value);
-  printf("intexec\n");
 }
 
 void CborBuffer::CborObject::uintExec(CborBuffer* cborBuffer,
                                       CborBuffer::CborObject& cborObject) {
   cborBuffer->encodeTagAndN(MT_UNSIGNED, (uint64_t)cborObject.coreData.intValue);
-  printf("uintexec\n");
 }
 
 void CborBuffer::CborObject::stringExec(CborBuffer* cborBuffer,
                                         CborBuffer::CborObject& cborObject) {
   cborBuffer->encodeTagAndN(MT_TEXT_STRING, cborObject.optionalLength);
   cborBuffer->putBytes(cborObject.coreData.stringValue, cborObject.optionalLength);
-  printf("stringexec\n");
 }
 
 void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer, 
@@ -159,17 +172,15 @@ void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer,
   for (int length = 0; length < cborObject.optionalLength; ) {
     cborBuffer->putByte(cborObject.coreData.stringValue[length++]);
   }
-  printf("precompexec\n");
 }
 
 void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
                                             CborBuffer::CborObject& cborObject) {
-  if (!cborObject.coreData.cborStructure->cborBuffer) {
+  if (cborObject.coreData.cborStructure->cborBuffer) {
     CborBuffer::setError(CborBuffer::Error::WRONG_CONSTRUCTOR);
   }
   cborObject.coreData.cborStructure->cborBuffer = cborBuffer;
   cborObject.coreData.cborStructure->putInitialTag();
-  printf("structexec\n");
 }
 
 CborBuffer::CborObject CBOR::Int(int64_t value) {

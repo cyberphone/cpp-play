@@ -23,39 +23,51 @@ class CborStructure;
 
 class CborBuffer {
 
-  class CborObject {
+  public:
 
-    union {
-      int64_t intValue;
-      double floatValue;
-      const uint8_t *stringValue;
-      CborStructure *cborStructure;
-    } coreData;
-    int optionalLength;
-    void (* executor)(CborBuffer*, CborObject&);
-    static void intExec(CborBuffer*, CborObject&);
-    static void uintExec(CborBuffer*, CborObject&);
-    static void stringExec(CborBuffer*, CborObject&);
-    static void preComputedExec(CborBuffer*, CborObject&);
-    static void structuredExec(CborBuffer*, CborObject&);
+    enum Error {OK, BUFFER_OVERFLOW, WRONG_CONSTRUCTOR};
 
-    friend class CborBuffer;
-    friend class CBOR;
-    friend class CborMap;
-    friend class CborArray;
-  };
+  private:
 
-  uint8_t *buffer;
-  int length;
-  int pos;
+    class CborObject {
 
-  void putByte(uint8_t byte);
+      union {
+        int64_t intValue;
+        double floatValue;
+        const uint8_t *stringValue;
+        CborStructure *cborStructure;
+      } coreData;
+      int optionalLength;
+      void (* executor)(CborBuffer*, CborObject&);
+      static void intExec(CborBuffer*, CborObject&);
+      static void uintExec(CborBuffer*, CborObject&);
+      static void stringExec(CborBuffer*, CborObject&);
+      static void preComputedExec(CborBuffer*, CborObject&);
+      static void structuredExec(CborBuffer*, CborObject&);
 
-  void putBytes(const uint8_t *byteBuffer, int length);
+      friend class CborBuffer;
+      friend class CBOR;
+      friend class CborMap;
+      friend class CborArray;
+    };
 
-  void encodeTagAndValue(int majorType, int length, uint64_t value);
+    uint8_t *buffer;
+    int length;
+    int pos;
 
-  void encodeTagAndN(int tag, uint64_t n);
+    void putByte(uint8_t byte);
+
+    void putBytes(const uint8_t *byteBuffer, int length);
+
+    void encodeTagAndValue(int majorType, int length, uint64_t value);
+
+    void encodeTagAndN(int tag, uint64_t n);
+
+    static Error error;
+
+    static void setError(Error error);
+
+    static bool stillOk();
 
   public:
     CborBuffer(uint8_t *outputBuffer, int outputBufferSize);
@@ -63,12 +75,6 @@ class CborBuffer {
     ~CborBuffer() {
       printf("buffdtor\n");
     }
-
-    enum Error {OK, BUFFER_OVERFLOW, WRONG_CONSTRUCTOR};
-    
-    static Error error;
-
-    static void setError(Error error);
 
     CborBuffer* add(CborObject cborObject);
 

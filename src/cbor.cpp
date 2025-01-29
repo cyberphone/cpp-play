@@ -26,7 +26,9 @@ int main(void) {
 
  
 ;
-  cborArray.add(CBOR::String("0123"));
+  cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+
+  for (int i = 0; i < 30; i++) { cborArray.add(CBOR::Int(i)); }
 
   
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));

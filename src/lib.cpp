@@ -8,6 +8,7 @@ CborBuffer::CborBuffer(uint8_t *outputBuffer, int outputBufferSize) {
   buffer = outputBuffer;
   length = outputBufferSize;
   pos = 0;
+  root = NULL;
   CborBuffer::Error error = Error::OK;
 }
 
@@ -76,6 +77,15 @@ void CborBuffer::printHex(const char *subject, int startPos, int endPos) {
 void CborBuffer::printHex() {
   printHex("buffer", 0, pos);
 }
+
+void CborBuffer::printStructuredItems() {
+  CborStructure *cborStructure = root;
+  while (cborStructure) {
+    printf("\nLINKEDITEM");
+    cborStructure->printHex();
+    cborStructure = cborStructure->next;
+  }
+}
 #endif
 
 CborStructure::CborStructure() {
@@ -88,6 +98,7 @@ CborStructure::CborStructure(CborBuffer* cborMasterBuffer) {
   size = 0;
   startPos = cborBuffer->pos;
   endPos = cborBuffer->pos;
+  next = 0;
 }
 
 void CborStructure::updateTag() {
@@ -116,6 +127,15 @@ void CborStructure::putInitialTag() {
   startPos = cborBuffer->pos;
   cborBuffer->putByte(getTag());
   endPos = cborBuffer->pos;
+  if (cborBuffer->root) {
+    CborStructure* cborStructure = cborBuffer->root;
+    while (cborStructure->next) {
+      cborStructure = cborStructure->next;
+    }
+    cborStructure->next = this;
+  } else {
+    cborBuffer->root = this;
+  }
 }
 
 int CborStructure::positionItem(int beginItem) {

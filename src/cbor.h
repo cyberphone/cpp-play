@@ -54,6 +54,7 @@ class CborBuffer {
     uint8_t *buffer;
     int length;
     int pos;
+    CborStructure *root;
 
     void putByte(uint8_t byte);
 
@@ -89,6 +90,7 @@ class CborBuffer {
 #ifdef DEBUG_MODE
     void printHex(const char *subject, int startPos, int endPos);
     void printHex();
+    void printStructuredItems();
 #endif
 
     friend class CBOR;
@@ -118,6 +120,7 @@ class CborStructure {
   int startPos;
   int endPos;
   CborBuffer *cborBuffer;
+  CborStructure *next;
 
   void updateTag();
 

@@ -36,7 +36,7 @@ cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));
 
   cborBuffer.add(CBOR::Int(6))
-            ->add(CBOR::String("AAAAf"));
+            ->add(CBOR::String("AAAA"));
 
   for (int i = 0; i < 30; i++) { 
     char string [5];
@@ -58,6 +58,8 @@ cborArray.printHex();
  
 
   cborBuffer.printHex();
+
+  cborBuffer.printStructuredItems();
 
   return 0;
 }

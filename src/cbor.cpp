@@ -26,11 +26,13 @@ int main(void) {
 
  
 ;
+cborArray.printHex();
+
   cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
 
   for (int i = 0; i < 30; i++) { cborArray.add(CBOR::Int(i)); }
-
   
+  cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));
 
   cborBuffer.add(CBOR::Int(6))
@@ -41,14 +43,21 @@ int main(void) {
     sprintf (string, "%d", i);
     cborMap.set(CBOR::Int(i), CBOR::String(string)); 
   }
+
+  cborBuffer.printHex();
+
+  cborMap.printHex();
+  cborArray.printHex();
+  cborBuffer.printHex("Custom", 134, 192);
   
   cborBuffer.add(CBOR::PreComputed(PRECOMPUTED, sizeof(PRECOMPUTED)));
-  
-  printf("\n");
-  for (int i = 0; i < cborBuffer.getPos(); i++) {
-    printf("%02x", cborBuffer.getByte(i));
-  }
-  printf("\n");
+  cborBuffer.printHex("Custom", 134, 192);
+  cborArray.setPosition(134, 192);
+   cborArray.add(CBOR::Int(-1));
+    cborBuffer.printHex("Custom", 134, 193);
+ 
+
+  cborBuffer.printHex();
 
   return 0;
 }

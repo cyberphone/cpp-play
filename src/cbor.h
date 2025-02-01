@@ -86,6 +86,11 @@ class CborBuffer {
       return pos;
     }
 
+#ifdef DEBUG_MODE
+    void printHex(const char *subject, int startPos, int endPos);
+    void printHex();
+#endif
+
     friend class CBOR;
     friend class CborMap;
     friend class CborArray;
@@ -124,6 +129,12 @@ class CborStructure {
 
   CborStructure();
   CborStructure(CborBuffer*);
+
+#ifdef DEBUG_MODE
+  public:
+    void printHex();
+    void setPosition(int startPos, int endPos);
+#endif
 
   friend class CborBuffer;
   friend class CborMap;

@@ -64,6 +64,20 @@ void CborBuffer::setError(Error error) {
   }
 }
 
+#ifdef DEBUG_MODE
+void CborBuffer::printHex(const char *subject, int startPos, int endPos) {
+   printf("\n%s[%d-%d]:\n", subject, startPos, endPos - 1);
+   for (int i = startPos; i < endPos; i++) {
+    printf("%02x", buffer[i]);
+  }
+  printf("\n");
+}
+
+void CborBuffer::printHex() {
+  printHex("buffer", 0, pos);
+}
+#endif
+
 CborStructure::CborStructure() {
   cborBuffer = NULL;
   // putInitialTag() does the rest of the initialization
@@ -127,6 +141,17 @@ int CborStructure::positionItem(int beginItem) {
   endPos = endItem - offset;
   return offset;
 }
+
+#ifdef DEBUG_MODE
+void CborStructure::setPosition(int startPos, int endPos) {
+  CborStructure::startPos = startPos;
+  CborStructure::endPos = endPos;
+}
+
+void CborStructure::printHex() {
+  cborBuffer->printHex(getTag() == MT_ARRAY ? "array" : "map", startPos, endPos);
+}
+#endif
 
 CborArray* CborArray::add(CborBuffer::CborObject value) {
   updateTag();

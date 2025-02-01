@@ -8,6 +8,7 @@
                 "-fcolor-diagnostics",
                 "-fansi-escape-codes",
                 "-g",
+                "-DDEBUG_MODE",
                 "${file}",
                 "${fileDirname}/lib.cpp",
                 "-o",

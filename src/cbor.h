@@ -128,7 +128,7 @@ class CborStructure {
 
   void putInitialTag();
 
-  int positionItem(int beginItem);
+  void positionItem(int beginItem);
 
   CborStructure();
   CborStructure(CborBuffer*);

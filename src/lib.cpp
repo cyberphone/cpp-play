@@ -138,14 +138,14 @@ void CborStructure::putInitialTag() {
   }
 }
 
-int CborStructure::positionItem(int beginItem) {
+void CborStructure::positionItem(int beginItem) {
   // structured-item misplaced-items new-item
   //                 |               |        |
   //                 * endPos        |        * endItem
   //                                 * beginItem
   int offset = beginItem - endPos;
   int endItem = cborBuffer->pos;
-
+ 
   for (int i = 0; i < endItem - beginItem; i++) {
     // Get new-item byte 
     uint8_t swap = cborBuffer->buffer[beginItem + i];
@@ -157,9 +157,29 @@ int CborStructure::positionItem(int beginItem) {
     // Store the new-item byte in the right position
     cborBuffer->buffer[endPos + i] = swap;
   }
-
-  endPos = endItem - offset;
-  return offset;
+  // Update the endPos of the structured item
+  endPos += endItem - beginItem;
+  // Unfortunately, we mmay have to update other structured items as well.
+  int lengthOfItem = endItem - beginItem;
+  if (size == 24) {
+    lengthOfItem++;
+  }
+  CborStructure* cborStructure = cborBuffer->root;
+  while (cborStructure) {
+    // Don't update ourselves
+    if (cborStructure != this) {
+      if (cborStructure->startPos < startPos) {
+        // Potentially enclosing item
+        if (cborStructure->endPos > startPos) {
+    //      cborStructure->endPos += lengthOfItem;
+        }
+      } else if (cborStructure->startPos > startPos) {
+ //       cborStructure->startPos += lengthOfItem;
+   //     cborStructure->endPos += lengthOfItem;
+      }
+    }
+    cborStructure = cborStructure->next;
+  }
 }
 
 #ifdef DEBUG_MODE

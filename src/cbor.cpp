@@ -26,6 +26,7 @@ int main(void) {
 
  
 ;
+ cborBuffer.printStructuredItems();
 cborArray.printHex();
 
   cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
@@ -48,11 +49,11 @@ cborArray.printHex();
 
   cborMap.printHex();
   cborArray.printHex();
-  cborBuffer.printHex("Custom", 134, 192);
+ // cborBuffer.printHex("Custom", 134, 192);
   
   cborBuffer.add(CBOR::PreComputed(PRECOMPUTED, sizeof(PRECOMPUTED)));
   cborBuffer.printHex("Custom", 134, 192);
-  cborArray.setPosition(134, 192);
+//  cborArray.setPosition(134, 192);
    cborArray.add(CBOR::Int(-1));
     cborBuffer.printHex("Custom", 134, 193);
  

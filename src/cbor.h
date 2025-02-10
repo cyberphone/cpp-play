@@ -52,8 +52,8 @@ class CborBuffer {
     };
 
     uint8_t *buffer;
-    int length;
-    int pos;
+    int maxBufferLength;
+    int currBufferLength;
     CborStructure *root;
 
     void putByte(uint8_t byte);
@@ -84,13 +84,14 @@ class CborBuffer {
     }
 
     int getPos() {
-      return pos;
+      return currBufferLength;
     }
 
 #ifdef DEBUG_MODE
-    void printHex(const char *subject, int startPos, int endPos);
+    void printHex(const char *subject, int startPos, int endPosP1);
     void printHex();
     void printStructuredItems();
+    void printOrder();
 #endif
 
     friend class CBOR;
@@ -116,9 +117,9 @@ class CBOR {
 };
 
 class CborStructure {
-  int size;
+  int items;
   int startPos;
-  int endPos;
+  int endPosP1;
   CborBuffer *cborBuffer;
   CborStructure *next;
 
@@ -152,11 +153,6 @@ class CborMap : public CborStructure {
 
   public:
     CborMap() : CborStructure() {
-
-    }
-
-    CborMap(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
-      putInitialTag();
     }
 
     CborMap* set(CborBuffer::CborObject key, CborBuffer::CborObject value);
@@ -172,11 +168,6 @@ class CborArray : public CborStructure {
 
   public:
     CborArray() : CborStructure() {
-
-    }
-
-    CborArray(CborBuffer& cborBuffer) : CborStructure(&cborBuffer) {
-      printf("array%x\n",this);
     }
 
     CborArray* add(CborBuffer::CborObject value);

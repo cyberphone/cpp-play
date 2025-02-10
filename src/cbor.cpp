@@ -17,7 +17,11 @@ int main(void) {
 
   CborArray cborArray;
 
-  CborMap(cborBuffer)
+  CborMap outerMap;
+
+  cborBuffer.add(CBOR::Map(outerMap));
+
+  outerMap
      .set(CBOR::Int(2), CBOR::String("value"))
      ->set(CBOR::Int(-3), CBOR::String("6789"))
      ->set(CBOR::Int(0), CBOR::Map(cborMap))
@@ -29,9 +33,12 @@ int main(void) {
  cborBuffer.printStructuredItems();
 cborArray.printHex();
 
-  cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+cborArray.add(CBOR::Int(23));
 
-  for (int i = 0; i < 30; i++) { cborArray.add(CBOR::Int(i)); }
+//  cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+  cborBuffer.printStructuredItems();
+
+  for (int i = 0; i < 1; i++) { cborArray.add(CBOR::Int(i)); }
   
   cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));
@@ -39,7 +46,7 @@ cborArray.printHex();
   cborBuffer.add(CBOR::Int(6))
             ->add(CBOR::String("AAAA"));
 
-  for (int i = 0; i < 30; i++) { 
+  for (int i = 0; i < 1; i++) { 
     char string [5];
     sprintf (string, "%d", i);
     cborMap.set(CBOR::Int(i), CBOR::String(string)); 

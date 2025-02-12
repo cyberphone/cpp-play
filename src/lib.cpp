@@ -182,7 +182,7 @@ void CborStructure::positionItem(int beginItem) {
           // Earlier structured object
           cborStructure->startPos += lengthOfItem;
         }
-      } else if (cborStructure->endPosP1 > endPosP1) {
+      } else if (cborStructure->endPosP1 + lengthOfItem > endPosP1) {
         // Higher in the buffer? Update!
         cborStructure->endPosP1 += lengthOfItem;
       }

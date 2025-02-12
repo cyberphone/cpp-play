@@ -95,7 +95,7 @@ void CborBuffer::printOrder() {
   CborStructure *cborStructure = root;
   printf("order: ");
   while (cborStructure) {
-    printf("%d-%d ", cborStructure->startPos, cborStructure->endPosP1);
+    printf("%d-%d ", cborStructure->startPos, cborStructure->endPosP1 - 1);
     cborStructure = cborStructure->next;
   }
   printf("\n");
@@ -134,19 +134,11 @@ void CborStructure::putInitialTag() {
   startPos = cborBuffer->currBufferLength;
   cborBuffer->putByte(getTag());
   endPosP1 = cborBuffer->currBufferLength;
+  // Add the structured item to the linked list of structured items
+  // Order is of no importance
   if (cborBuffer->root) {
     this->next = cborBuffer->root;
     cborBuffer->root = this;
-    CborStructure* cborStructure = this;
-    while (cborStructure->next) {
-      if (cborStructure->startPos < cborStructure->next->startPos) {
-        CborStructure* save = cborStructure->next;
-        cborStructure->next = cborStructure;
-        cborStructure->next->next = save;
-      } else {
-        cborStructure = cborStructure->next;
-      }
-    }
   } else {
     cborBuffer->root = this;
   }
@@ -174,24 +166,25 @@ void CborStructure::positionItem(int beginItem) {
       cborBuffer->buffer[endPosP1 + i] = swap;
     }
   }
-  // Unfortunately, we mmay have to update other structured items as well.
+  // How many bytes did we add?
   int lengthOfItem = endItem - beginItem;
   // Update endPosP1 of the structured item
   endPosP1 += lengthOfItem;
   cborBuffer->printOrder();
-  if (cborBuffer->root->startPos == 15) {
-    printf("HI\n");
-  }
+  // Potentially relocate other structured
   CborStructure* cborStructure = cborBuffer->root;
   while (cborStructure) {
     // Don't update ourselves
     if (cborStructure != this) {
-      if (cborStructure->endPosP1 > endPosP1) {
+      //Higher in the buffer? Update!
+      if (startPos < cborStructure->startPos) {
+        if (endPosP1 < cborStructure->endPosP1) {
+          // Earlier structured object
+          cborStructure->startPos += lengthOfItem;
+        }
+      } else if (cborStructure->endPosP1 > endPosP1) {
+        // Higher in the buffer? Update!
         cborStructure->endPosP1 += lengthOfItem;
-      }
-      if (cborStructure->startPos > startPos) {
-        printf("%d %d %d\n", cborStructure->startPos, startPos, lengthOfItem);
-  //      cborStructure->startPos += lengthOfItem;
       }
     }
     cborStructure = cborStructure->next;

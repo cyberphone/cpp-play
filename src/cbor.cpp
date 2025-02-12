@@ -33,9 +33,11 @@ int main(void) {
  cborBuffer.printStructuredItems();
 cborArray.printHex();
 
-cborArray.add(CBOR::Int(23));
+//cborArray.add(CBOR::Int(23));
 
-//  cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+ cborArray.add(CBOR::String("0123")); 
+ cborArray.add(CBOR::String("second element"));
+  // cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
   cborBuffer.printStructuredItems();
 
   for (int i = 0; i < 1; i++) { cborArray.add(CBOR::Int(i)); }

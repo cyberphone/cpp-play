@@ -170,21 +170,23 @@ void CborStructure::positionItem(int beginItem) {
   int lengthOfItem = endItem - beginItem;
   // Update endPosP1 of the structured item
   endPosP1 += lengthOfItem;
+  int totalBytes = lengthOfItem + (items == 24 ? 1 : 0);
   cborBuffer->printOrder();
   // Potentially relocate other structured
   CborStructure* cborStructure = cborBuffer->root;
   while (cborStructure) {
     // Don't update ourselves
     if (cborStructure != this) {
-      //Higher in the buffer? Update!
+      // Figuring out what to update
       if (startPos < cborStructure->startPos) {
         if (endPosP1 < cborStructure->endPosP1) {
           // Earlier structured object
-          cborStructure->startPos += lengthOfItem;
+          cborStructure->startPos += totalBytes;
+          cborStructure->endPosP1 += totalBytes;
         }
-      } else if (cborStructure->endPosP1 + lengthOfItem > endPosP1) {
+      } else if (cborStructure->endPosP1 + totalBytes > endPosP1) {
         // Higher in the buffer? Update!
-        cborStructure->endPosP1 += lengthOfItem;
+        cborStructure->endPosP1 += totalBytes;
       }
     }
     cborStructure = cborStructure->next;

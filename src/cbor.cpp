@@ -35,12 +35,12 @@ cborArray.printHex();
 
 //cborArray.add(CBOR::Int(23));
 
- cborArray.add(CBOR::String("0123")); 
- cborArray.add(CBOR::String("second element"));
-  // cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+ //cborArray.add(CBOR::String("0123")); 
+ //cborArray.add(CBOR::String("second element"));
+ cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
   cborBuffer.printStructuredItems();
 
-  for (int i = 0; i < 1; i++) { cborArray.add(CBOR::Int(i)); }
+  for (int i = 0; i < 30; i++) { cborArray.add(CBOR::Int(i)); }
   
   cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));

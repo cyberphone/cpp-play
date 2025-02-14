@@ -49,6 +49,7 @@ class CborBuffer {
       friend class CBOR;
       friend class CborMap;
       friend class CborArray;
+      friend class CborStructure;
     };
 
     uint8_t *buffer;
@@ -119,7 +120,7 @@ class CBOR {
 class CborStructure {
   int items;
   int startPos;
-  int endPosP1;
+  int length;
   CborBuffer *cborBuffer;
   CborStructure *next;
 
@@ -129,15 +130,15 @@ class CborStructure {
 
   void putInitialTag();
 
-  void positionItem(int beginItem);
+  void updateStructuredItem(int offset, CborBuffer::CborObject& cborObject);
+
+  void positionItem(int beginItem, CborBuffer::CborObject& object1, CborBuffer::CborObject& object2);
 
   CborStructure();
-  CborStructure(CborBuffer*);
 
 #ifdef DEBUG_MODE
   public:
     void printHex();
-    void setPosition(int startPos, int endPos);
 #endif
 
   friend class CborBuffer;

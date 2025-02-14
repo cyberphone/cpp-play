@@ -33,14 +33,17 @@ int main(void) {
  cborBuffer.printStructuredItems();
 cborArray.printHex();
 
-//cborArray.add(CBOR::Int(23));
+// cborArray.add(CBOR::Int(23));
 
  //cborArray.add(CBOR::String("0123")); 
  //cborArray.add(CBOR::String("second element"));
- cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
+  cborArray.add(CBOR::String("0123"))->add(CBOR::String("second element"));
   cborBuffer.printStructuredItems();
 
   for (int i = 0; i < 30; i++) { cborArray.add(CBOR::Int(i)); }
+  CborArray innerArray;
+  cborArray.add(CBOR::Array(innerArray));
+  innerArray.add(CBOR::String("inner"));
   
   cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));
@@ -48,7 +51,7 @@ cborArray.printHex();
   cborBuffer.add(CBOR::Int(6))
             ->add(CBOR::String("AAAA"));
 
-  for (int i = 0; i < 1; i++) { 
+  for (int i = 0; i < 30; i++) { 
     char string [5];
     sprintf (string, "%d", i);
     cborMap.set(CBOR::Int(i), CBOR::String(string)); 
@@ -58,15 +61,10 @@ cborArray.printHex();
 
   cborMap.printHex();
   cborArray.printHex();
- // cborBuffer.printHex("Custom", 134, 192);
   
   cborBuffer.add(CBOR::PreComputed(PRECOMPUTED, sizeof(PRECOMPUTED)));
-  cborBuffer.printHex("Custom", 134, 192);
-//  cborArray.setPosition(134, 192);
    cborArray.add(CBOR::Int(-1));
-    cborBuffer.printHex("Custom", 134, 193);
  
-
   cborBuffer.printHex();
 
   cborBuffer.printStructuredItems();

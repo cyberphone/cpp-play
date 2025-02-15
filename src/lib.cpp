@@ -9,14 +9,14 @@ CborBuffer::CborBuffer(uint8_t *outputBuffer, int outputBufferSize) {
   maxBufferLength = outputBufferSize;
   currBufferLength = 0;
   root = NULL;
-  CborBuffer::Error error = Error::OK;
+  error = Error::OK;
 }
 
 void CborBuffer::putByte(uint8_t byte) {
   if (currBufferLength < maxBufferLength) {
     buffer[currBufferLength++] = byte;
   } else {
-    CborBuffer::setError(Error::BUFFER_OVERFLOW);
+    setError(Error::BUFFER_OVERFLOW);
   }
 }
 
@@ -56,15 +56,15 @@ CborBuffer* CborBuffer::add(CborObject cborObject) {
   return this;
 }
 
-CborBuffer::Error CborBuffer::error = CborBuffer::Error::OK;
-
-
 bool CborBuffer::stillOk() {
-  return CborBuffer::error == CborBuffer::Error::OK;
+  return error == CborBuffer::Error::OK;
 }
 
 void CborBuffer::setError(Error error) {
-  if (CborBuffer::stillOk()) {
+  if (stillOk()) {
+#ifdef DEBUG_MODE
+  printf("\nERROR=%d\n", error);
+#endif
     CborBuffer::error = error;
   }
 }
@@ -109,7 +109,7 @@ CborStructure::CborStructure() {
 }
 
 void CborStructure::updateTag() {
-  if (CborBuffer::stillOk()) {
+  if (cborBuffer->stillOk()) {
     if (++items == 24) {
       // Extend buffer with one byte
       cborBuffer->putByte(0);
@@ -262,7 +262,7 @@ void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer,
 void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
                                             CborBuffer::CborObject& cborObject) {
   if (cborObject.coreData.cborStructure->cborBuffer) {
-    CborBuffer::setError(CborBuffer::Error::WRONG_CONSTRUCTOR);
+    cborBuffer->setError(CborBuffer::Error::ALREADY_USED);
   }
   cborObject.coreData.cborStructure->cborBuffer = cborBuffer;
   cborObject.coreData.cborStructure->putInitialTag();

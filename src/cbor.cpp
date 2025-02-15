@@ -44,12 +44,17 @@ cborArray.printHex();
   CborArray innerArray;
   cborArray.add(CBOR::Array(innerArray));
   innerArray.add(CBOR::String("inner"));
+  CborMap innerMap;
+  innerArray.add(CBOR::Map(innerMap));
   
   cborArray.printHex();
   //  cm.set(CBOR::Int(-2), CBOR::String("h"));
 
   cborBuffer.add(CBOR::Int(6))
             ->add(CBOR::String("AAAA"));
+
+  innerMap.set(CBOR::Int(6), CBOR::Int(7));
+  cborMap.set(CBOR::Int(-1), CBOR::String("-1"));
 
   for (int i = 0; i < 30; i++) { 
     char string [5];

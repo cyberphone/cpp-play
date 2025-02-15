@@ -25,7 +25,7 @@ class CborBuffer {
 
   public:
 
-    enum Error {OK, BUFFER_OVERFLOW, WRONG_CONSTRUCTOR};
+    enum Error {OK, BUFFER_OVERFLOW, ALREADY_USED};
 
   private:
 
@@ -65,11 +65,11 @@ class CborBuffer {
 
     void encodeTagAndN(int tag, uint64_t n);
 
-    static Error error;
+    Error error;
 
-    static void setError(Error error);
+    void setError(Error error);
 
-    static bool stillOk();
+    bool stillOk();
 
   public:
     CborBuffer(uint8_t *outputBuffer, int outputBufferSize);

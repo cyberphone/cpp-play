@@ -104,8 +104,7 @@ void CborBuffer::printOrder() {
 #endif
 
 CborStructure::CborStructure() {
-  cborBuffer = NULL;
-  // putInitialTag() does the rest of the initialization
+  // putInitialTag() does the actual initialization
 }
 
 void CborStructure::updateTag() {
@@ -136,9 +135,18 @@ void CborStructure::putInitialTag() {
   cborBuffer->putByte(getTag());
   // Add the structured item to the linked list of structured items
   // Order is of no importance
-  if (cborBuffer->root) {
-    this->next = cborBuffer->root;
-    cborBuffer->root = this;
+  CborStructure* cborStructure;
+  if (cborStructure = cborBuffer->root) {
+    while (true) {
+      if (cborStructure == this) {
+        return;
+      }
+      if (!cborStructure->next) {
+        break;
+      }
+      cborStructure = cborStructure->next;
+    }
+    cborStructure->next = this;
   } else {
     cborBuffer->root = this;
   }
@@ -261,9 +269,6 @@ void CborBuffer::CborObject::preComputedExec(CborBuffer* cborBuffer,
 
 void CborBuffer::CborObject::structuredExec(CborBuffer* cborBuffer,
                                             CborBuffer::CborObject& cborObject) {
-  if (cborObject.coreData.cborStructure->cborBuffer) {
-    cborBuffer->setError(CborBuffer::Error::ALREADY_USED);
-  }
   cborObject.coreData.cborStructure->cborBuffer = cborBuffer;
   cborObject.coreData.cborStructure->putInitialTag();
 }

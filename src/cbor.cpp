@@ -54,7 +54,10 @@ cborArray.printHex();
             ->add(CBOR::String("AAAA"));
 
   innerMap.set(CBOR::Int(6), CBOR::Int(7));
-  cborMap.set(CBOR::Int(-1), CBOR::String("-1"));
+  CborMap otherMap;
+  cborMap.set(CBOR::Int(-1), CBOR::Map(innerMap));
+
+  innerMap.set(CBOR::String("Key"), CBOR::String("Value"));
 
   for (int i = 0; i < 30; i++) { 
     char string [5];
